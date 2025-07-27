@@ -19,7 +19,7 @@ const values: FormValues = {
 
 const AddNoteSchema = Yup.object().shape({
   title: Yup.string()
-    .min(3, "Too Short!")
+    .min(3, "Title must be at least 3 characters")
     .max(50, "Too Long!")
     .required("Required field"),
   content: Yup.string().max(500, "Too Long!"),
