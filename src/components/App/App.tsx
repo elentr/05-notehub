@@ -1,13 +1,66 @@
-// import toast, { Toaster } from "react-hot-toast";
 import css from "./App.module.css";
-// import ErrorMessage from "../ErrorMessage/ErrorMessage";
-// import Loader from "../Loader/Loader";
-// import MovieGrid from "../MovieGrid/MovieGrid";
-// import MovieModal from "../MovieModal/MovieModal";
-// import SearchBar from "../SearchBar/SearchBar";
-// import { fetchMovies } from "../../services/movieService";
-// import type { Movie } from "../../types/movie";
-// import { keepPreviousData, useQuery } from "@tanstack/react-query";
-// import ReactPaginate from "react-paginate";
+import Modal from "../Modal/Modal";
+import NoteForm from "../NoteForm/NoteForm";
+import NoteList from "../NoteList/NoteList";
+import Pagination from "../Pagination/Pagination";
+import SearchBox from "../SearchBox/SearchBox";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import { useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { fetchNotes } from "../../services/noteService";
 
-export default function App() {}
+export default function App() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const updateSearchQuery = useDebouncedCallback((value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  }, 300);
+
+  const handleSearchChange = (value: string) => {
+    setInputValue(value);
+    updateSearchQuery(value);
+  };
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["notes", currentPage, searchQuery],
+    queryFn: () => fetchNotes(currentPage, searchQuery),
+    placeholderData: keepPreviousData,
+  });
+
+  const totalPages = data?.totalPages ?? 0;
+
+  return (
+    <div className={css.app}>
+      <header className={css.toolbar}>
+        <SearchBox value={inputValue} onSearch={handleSearchChange} />
+        {totalPages > 1 && (
+          <Pagination
+            totalNumberOfPages={totalPages}
+            currentActivePage={currentPage}
+            setPage={setCurrentPage}
+          />
+        )}
+        <button className={css.button} onClick={openModal}>
+          Create note +
+        </button>
+      </header>
+      {isLoading && <Loader />}
+      {isError && <ErrorMessage />}
+      {data && <NoteList notes={data.notes ?? []} />}
+      {isModalOpen && (
+        <Modal onClose={closeModal}>
+          <NoteForm onCloseModal={closeModal} />
+        </Modal>
+      )}
+    </div>
+  );
+}
