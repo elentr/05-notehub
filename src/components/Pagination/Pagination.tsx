@@ -15,7 +15,7 @@ export default function Pagination({
   return (
     <ReactPaginate
       pageCount={totalNumberOfPages}
-      pageRangeDisplayed={5}
+      pageRangeDisplayed={2}
       marginPagesDisplayed={2}
       breakLabel="..."
       nextLabel=">"
